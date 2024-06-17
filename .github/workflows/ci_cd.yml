@@ -51,8 +51,12 @@ jobs:
         EC2_USER: ${{ secrets.EC2_USER }}
       run: |
         ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa $EC2_USER@$EC2_HOST << 'EOF'
-          sudo npm install -g pm2
           cd ~/app
           pm2 stop all || true
-          pm2 start dist/main.js --name my-nestjs-app
+          git clone https://github.com/Burhanuddin-2001/NestJs-Hello-World-App.git
+          cd NestJs-Hello-World-App/
+          npm install
+          npm run build
+          sudo npm install -g pm2
+          npm run start:prod
         EOF
