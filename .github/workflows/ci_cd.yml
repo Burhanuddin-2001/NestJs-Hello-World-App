@@ -43,10 +43,8 @@ jobs:
         echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
         ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa $EC2_USER@$EC2_HOST << 'EOF'
-          rm -rf ~/app
-          mkdir -p ~/app
+          rm ~/NestJs-Hello-World-App/ -rf
         EOF
-        scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -r ./dist $EC2_USER@$EC2_HOST:~/app
 
     - name: Deploy on EC2
       env:
@@ -56,8 +54,13 @@ jobs:
       run: |
         ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa $EC2_USER@$EC2_HOST << 'EOF'
           pm2 stop all || true
-          cd ~/app/dist
-          npm install --prefix ~/app --production
-          pm2 start main.js
+          sudo lsof -ti:3000 | xargs sudo kill -9          
+          pm2 delete all
+          git clone https://github.com/Burhanuddin-2001/NestJs-Hello-World-App.git
+          cd NestJs-Hello-World-App/
+          npm install
+          npm audit fix
+          npm run build
+          pm2 start npm --name "my-nestjs-app" -- run start:prod
         EOF
       
