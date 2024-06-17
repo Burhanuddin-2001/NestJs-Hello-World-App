@@ -42,6 +42,10 @@ jobs:
         mkdir -p ~/.ssh
         echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
+        ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa $EC2_USER@$EC2_HOST << 'EOF'
+          rm -rf ~/app
+          mkdir -p ~/app
+        EOF
         scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -r ./dist $EC2_USER@$EC2_HOST:~/app
 
     - name: Deploy on EC2
@@ -50,13 +54,10 @@ jobs:
         EC2_HOST: ${{ secrets.EC2_HOST }}
         EC2_USER: ${{ secrets.EC2_USER }}
       run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa $EC2_USER@$EC2_HOST << 'EOF'
-            cd ~/app/NestJs-Hello-World-App
-            git pull origin main  # Assuming you're deploying from 'main' branch
-            npm install
-            npm audit fix
-            npm run build
-            pm2 stop all || true
-            pm2 start dist/main.js
-          EOF
+        ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa $EC2_USER@$EC2_HOST << 'EOF'
+          pm2 stop all || true
+          cd ~/app/dist
+          npm install --prefix ~/app --production
+          pm2 start main.js
+        EOF
       
